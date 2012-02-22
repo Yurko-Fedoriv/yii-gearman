@@ -1,0 +1,8 @@
+#!/usr/bin/env php
+<?php
+define('ROOT', __DIR__);
+
+//change this to match your yii framework path
+require_once ROOT . '/../../yii-1.1/framework/yii.php';
+
+Yii::createApplication('\gearman\Application', require ROOT . '/config/main.php')->run();

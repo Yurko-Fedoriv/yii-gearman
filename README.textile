@@ -1,0 +1,15 @@
+This is an extension for Yii PHP Framework to implement highly customizable Gearman workers.
+
+Requirements:
+* "PHP 5.3":http://php.net/
+* "Yii":http://www.yiiframework.com/
+* "Gearman Job Server":http://gearman.org/
+* "Memcached":http://memcached.org/
+* "Pecl Memcached":http://pecl.php.net/package/memcached
+* "Pecl Gearman":http://pecl.php.net/package/gearman
+
+To see how it works enter skeleton subdirectory and run
+./application worker example
+to start worker, and then from other prompt
+./application example
+to send example job
