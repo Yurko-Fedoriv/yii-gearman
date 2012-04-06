@@ -1,9 +1,6 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/15/12
- * Time: 3:02 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
 class LogFilter extends \CComponent
@@ -20,7 +17,7 @@ class LogFilter extends \CComponent
         $prefix = \Yii::app()->getLogPrefix();
         if (is_array($logs) && $prefix) {
             foreach ($logs as &$log) {
-                $log[0]=$prefix.' '.$log[0];
+                $log[0] = $prefix . ' ' . $log[0];
             }
         }
         return $logs;

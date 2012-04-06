@@ -1,12 +1,15 @@
 <?php
 /**
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
+ */
+namespace gearman\db;
+/**
  * Connection extends \CDbConnection with reconnection behavior. If connection fails with codes 2000-2013 reconnecting to database server will be performed until succeeded or max attempts is reached..
  * NOTE: intended for MYSQL server.
  *
- * @throws CDbException
+ * @throws \CDbException
  *
  */
-namespace gearman\db;
 class Connection extends \CDbConnection
 {
     const RECONNECT_TIMEOUT = 5;

@@ -1,11 +1,7 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/15/12
- * Time: 5:35 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
-
 namespace gearman;
 /**
  * Component which allows to connect to gearman server and retrieve its' status information.
@@ -138,7 +134,8 @@ class Server extends \CApplicationComponent
 
 /**
  * @param array $array Input array
- * @param int $row Get single row of multidimensional array
+ * @param int $row     Get single row of multidimensional array
+ *
  * @return array
  */
 function arrayRow(Array $array, $row) {

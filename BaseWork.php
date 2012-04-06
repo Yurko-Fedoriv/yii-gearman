@@ -1,18 +1,14 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/14/12
- * Time: 5:23 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
-
 /**
  * Base class for all gearman works, which actually implement worker functionality.
  * Children class names should have "Work" suffix to be recognised as work class.
  *
  * @property array $tasks            Array in which keys contain gearman function aliases and values realising methods for this work object
- * @property-read Job $currentJob Currently handled Job object
+ * @property-read Job $currentJob    Currently handled Job object
  */
 abstract class BaseWork extends \CComponent
 {
@@ -20,6 +16,8 @@ abstract class BaseWork extends \CComponent
      * @var string Name of the current Work
      */
     public $id;
+
+    public $jobClass = '\gearman\Job';
 
     /**
      * @var Job Stores currently handled job object. Is set when work receives task.
@@ -29,7 +27,7 @@ abstract class BaseWork extends \CComponent
 
     /**
      * @var array
-     * @see LBaseWork::getTasks()
+     * @see BaseWork::getTasks()
      */
     private $_tasks;
 
@@ -63,13 +61,13 @@ abstract class BaseWork extends \CComponent
 
 
     /**
-         * Logs message defining category.
-         *
-         * @param string $msg Message to log
-         * @param string $level Message level
-         *
-         * @return void
-         */
+     * Logs message defining category.
+     *
+     * @param string $msg   Message to log
+     * @param string $level Message level
+     *
+     * @return void
+     */
 
     public function log($msg, $level = \CLogger::LEVEL_INFO) {
         \Yii::log($msg, $level, $this->getCurrentJob() ? $this->getCurrentJob()->function : "gearman.{$this->id}");
@@ -90,7 +88,8 @@ abstract class BaseWork extends \CComponent
 
         $startTime = microtime(true);
 
-        $job = new Job($gearmanJob);
+        /** @var $job Job */
+        $job = new $this->jobClass($gearmanJob);
 
         \Yii::app()->setLogPrefix($job->getHandle(), $job->logPrefix);
 
@@ -133,6 +132,8 @@ abstract class BaseWork extends \CComponent
             $job->failed($e);
             $this->log($e->getMessage(), \CLogger::LEVEL_ERROR);
             \Yii::app()->onException(new \CExceptionEvent($this, $e));
+
+            $this->error($gearmanJob->workload(), $e);
         }
 
         if ($job->callback) {
@@ -141,16 +142,17 @@ abstract class BaseWork extends \CComponent
                 if (is_array($callback)) {
                     $function = array_shift($callback);
                     $params = $callback;
-                    array_unshift($params, $job->getStatusInfo());
                 }
                 else {
                     $function = $callback;
-                    $params = array($job->getStatusInfo());
+                    $params = array();
                 }
 
-                $params[count($params)] = $returnData;
+                $params['status'] = $job->getStatusInfo();
+                $params['result'] = $returnData;
 
-                $callbackJob = new Job($params, $function, null, $job->logPrefix);
+                /** @var $callbackJob Job */
+                $callbackJob = new $this->jobClass($params, $function, null, $job->logPrefix);
                 $callbackJob->send();
             } catch (\Exception $e) {
                 $this->log("Failed to send callback for job {$job->getHandle()}: {$e->getMessage()}");
@@ -164,17 +166,21 @@ abstract class BaseWork extends \CComponent
 
     /**
      * Method that encodes task result before returning it to gearman
+     *
      * @param mixed $data data to encode
+     *
      * @return string
      */
-    protected function encodeReturnData($data){
-       return base64_encode(\CJSON::encode($data));
+    protected function encodeReturnData($data) {
+        return base64_encode(\CJSON::encode($data));
     }
 
     /**
      * Wrapper for smart calling task methods
+     *
      * @param string $method Method of current instance to call
-     * @param array $params Params to be passed to method. Supports param name or param position indexed array
+     * @param array $params  Params to be passed to method. Supports param name or param position indexed array
+     *
      * @return mixed Method return value
      * @throws WorkException
      */
@@ -185,10 +191,10 @@ abstract class BaseWork extends \CComponent
 
         foreach ($reflection['params'] as $number => $parameter) {
             /** @var $parameter \ReflectionParameter */
-            if (isset($params[$parameter->name])) {
+            if (array_key_exists($parameter->name, $params)) {
                 $callParams[$parameter->name] = $params[$parameter->name];
             }
-            elseif (isset($params[$number])) {
+            elseif (array_key_exists($number, $params)) {
                 $callParams[$parameter->name] = $params[$number];
             }
             elseif ($parameter->isOptional()) {
@@ -219,7 +225,9 @@ abstract class BaseWork extends \CComponent
 
     /**
      * Method to retrieve reflection information for current instance method. Caches data in memory for multiple usages
+     *
      * @param string $method Method name of current instance
+     *
      * @return array Array containig 'method' key with method reflection and 'params' key with array reflections of all method params.
      */
     public function getReflectionMethod($method) {
@@ -235,7 +243,9 @@ abstract class BaseWork extends \CComponent
 
     /**
      * Returns method name associated with gearman function
+     *
      * @param string $function gearman function to map
+     *
      * @return string method name of current instance associated with gearman function
      * @throws WorkException if mapping is possible
      */
@@ -253,6 +263,23 @@ abstract class BaseWork extends \CComponent
     }
 
     /**
+     * This will map work method to gearman function according to work's function map definition.
+     *
+     * @param string $method Work method name
+     *
+     * @return string Corresponding gearman function
+     * @throws WorkException In case method is not present in map
+     */
+    public function mapMethod($method) {
+        $function = array_search($method, $this->getTasks());
+        if ($function) {
+            return $function;
+        }
+
+        throw new WorkException("Cannot map $method to gearman function.");
+    }
+
+    /**
      * GETTER
      * Returns currently handled Job object
      *
@@ -264,6 +291,7 @@ abstract class BaseWork extends \CComponent
 
     /**
      * GETTER
+     *
      * @return array Current task map
      */
     public function getTasks() {
@@ -275,22 +303,24 @@ abstract class BaseWork extends \CComponent
 
     /**
      * SETTER
+     *
      * @param array $value <gearman function> => <class method> map
+     *
      * @return bool
      */
-    public function setTasks(array $value){
-        if(!$value){
+    public function setTasks(array $value) {
+        if (!$value) {
             return false;
         }
 
-        foreach($value as $function => &$method){
-            if(method_exists($this, $method)){
+        foreach ($value as $function => &$method) {
+            if (method_exists($this, $method)) {
                 continue;
             }
-            elseif(method_exists($this, "task$method")){
+            elseif (method_exists($this, "task$method")) {
                 $method = "task$method";
             }
-            else{
+            else {
                 throw new WorkException("Cannot map function $function to undefined method $method");
             }
         }
@@ -322,7 +352,9 @@ abstract class BaseWork extends \CComponent
 
     /**
      * Default implementatin for generation geearman function names. uses [application id].[work id].[task name] pattern
+     *
      * @param string $method Work method name to generate gearman function name for
+     *
      * @return string Gearman function name
      */
     public function formatFunctionName($method) {
@@ -340,8 +372,9 @@ abstract class BaseWork extends \CComponent
 
     /**
      * Register worker for handling gearman functions
+     *
      * @param string $function gearman function to regiter for
-     * @param string $method current work method name to be mapped to function
+     * @param string $method   current work method name to be mapped to function
      */
     public function register($function, $method) {
         $tasks = $this->getTasks();
@@ -374,6 +407,7 @@ abstract class BaseWork extends \CComponent
 
     /**
      * Unregisters worker from gearman function
+     *
      * @param string $function geramn function
      */
     public function unregister($function) {
@@ -389,6 +423,10 @@ abstract class BaseWork extends \CComponent
         foreach ($this->getTasks() as $function => $method) {
             $this->register($function, $method);
         }
+    }
+
+    public function error($workload, $exception) {
+
     }
 }
 

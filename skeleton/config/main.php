@@ -3,7 +3,7 @@
 //For example ROOT . '/extensions/yii-gearman'
 Yii::setPathOfAlias('gearman', ROOT . '/../');
 return array(
-    'name' => 'sceleton',
+    'name' => 'skeleton',
     'basePath' => ROOT,
 
     'preload' => array('log'),

@@ -1,12 +1,8 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/15/12
- * Time: 2:02 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
-
 /**
  * Tweaked \CConsoleApplication class to better fit for gearman worker oriented application.
  *
@@ -121,6 +117,7 @@ class Application extends \CConsoleApplication
 
     /**
      * Shortcut to gearman module
+     *
      * @return Module
      */
     public function getGearman() {
@@ -129,6 +126,7 @@ class Application extends \CConsoleApplication
 
     /**
      * Shortcut to cache component included in gearman module.
+     *
      * @return MemCache
      */
     public function getCache() {

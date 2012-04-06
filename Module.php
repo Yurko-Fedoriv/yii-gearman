@@ -1,9 +1,6 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/15/12
- * Time: 8:10 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
 /**
@@ -12,13 +9,15 @@ namespace gearman;
  * modules => array('gearman' => array('class' => '\gearman\Module', 'components' => array('client' => array('servers' => '172.16.1.111:4730'))))
  *
  * Components:
+ *
  * @property Client $client
  * @property Worker $worker
  * @property Server $server
  * @property MemCache  $cache
  */
 
-class Module extends \CModule{
+class Module extends \CModule
+{
 
     /**
      * @var WorkerCommand Currently running worker command instance.
@@ -33,6 +32,7 @@ class Module extends \CModule{
 
     /**
      * Initailizes component, also merges runtime configuration with default one.
+     *
      * @return void
      */
     public function init() {
@@ -43,22 +43,23 @@ class Module extends \CModule{
 
     /**
      * Provides default configuration for gearman components. Uses host property
+     *
      * @return array
      */
     protected function defaultComponentsConfig() {
         return array(
             'client' => array(
                 'class' => '\gearman\Client',
-                'servers' => $this->host.':4730'
+                'servers' => $this->host . ':4730'
             ),
             'worker' => array(
                 'class' => '\gearman\Worker',
-                'servers' => $this->host.':4730',
+                'servers' => $this->host . ':4730',
                 'options' => array(GEARMAN_WORKER_GRAB_UNIQ),
             ),
             'server' => array(
                 'class' => '\gearman\Server',
-                'server' => $this->host.':4730'
+                'server' => $this->host . ':4730'
             ),
             'cache' => array(
                 'class' => '\gearman\MemCache',

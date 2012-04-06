@@ -1,11 +1,7 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/14/12
- * Time: 4:01 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
-
 namespace gearman;
 use \Yii;
 
@@ -92,6 +88,7 @@ class WorkerCommand extends \CConsoleCommand
 
     /**
      * Creates work instance based on it's name.
+     *
      * @param string  $name
      *
      * @return BaseWork
@@ -99,8 +96,8 @@ class WorkerCommand extends \CConsoleCommand
     public function getWork($name) {
         $name = preg_replace('/^(\w+)Work$/', '\1', $name);
 
-        foreach(array_keys($this->works) as $id){
-            if(strtolower($name) == strtolower($id)){
+        foreach (array_keys($this->works) as $id) {
+            if (strtolower($name) == strtolower($id)) {
                 $name = $id;
             }
         }
@@ -129,7 +126,7 @@ class WorkerCommand extends \CConsoleCommand
      * @return Worker
      */
     public function getWorker() {
-        if(!Yii::app()->hasModule('gearman')){
+        if (!Yii::app()->hasModule('gearman')) {
             throw new WorkerCommandException('Module of class \gearman\Module must be attached to the application with name gearman');
         }
         return Yii::app()->getModule('gearman')->getComponent('worker');

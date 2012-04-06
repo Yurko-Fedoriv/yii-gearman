@@ -1,9 +1,6 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/15/12
- * Time: 8:10 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
 /**
@@ -49,7 +46,6 @@ namespace gearman;
  * See {@link http://www.php.net/manual/en/function.memcache-addserver.php}
  * for more details.
  *
- * @author yurko
  */
 use Memcached, Yii, CException;
 
@@ -284,7 +280,7 @@ class MemCache extends \CMemCache
      * Appends data to existing key in cache.
      * The reason that value is forced to be a string is that prepending mixed types is not well-defined.
      *
-     * @param string $id The key of the item to append the data to.
+     * @param string $id   The key of the item to append the data to.
      * @param string $data The string to append.
      *
      * @return bool Returns TRUE on success or FALSE on failure. The MemCache::getResultCode() will return Memcached::RES_NOTSTORED if the key does not exist.

@@ -1,9 +1,6 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/15/12
- * Time: 3:29 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
 /**
@@ -72,17 +69,26 @@ class Job extends \CComponent
     private $_gearmanJob;
 
     /**
+     * @var string Handle of current job if present
+     */
+    private $_handle;
+
+    /**
      * Constructor
+     *
      * @param array|\GearmanJob $params
      * @param string $function Gearman function to associate instance with. May be passed in params array as 'function' key
-     * @param array $callback Callback info. May ba passed in params as 'callback' key
+     * @param array $callback  Callback info. May ba passed in params as 'callback' key
      * @param mixed $logPrefix Log prefix to used while job will be performed. May be passed in params array as 'logPrefix' key
      */
     function __construct($params, $function = null, $callback = null, $logPrefix = null) {
         if ($params instanceof \GearmanJob) {
             $this->_gearmanJob = $params;
+            $this->_handle = $this->_gearmanJob->handle();
+
             $params = $this->decode($params->workload());
             $function = $this->_gearmanJob->functionName();
+
         }
         if (isset($params['logPrefix'])) {
             $logPrefix = $params['logPrefix'];
@@ -108,7 +114,7 @@ class Job extends \CComponent
      * @return null|string Get handle of current Job.
      */
     public function getHandle() {
-        return $this->_gearmanJob ? $this->_gearmanJob->handle() : null;
+        return $this->_handle;
     }
 
     /**
@@ -122,17 +128,20 @@ class Job extends \CComponent
      * @return string Encoded workload to be sent to gearman job server
      */
     public function encode() {
-        return base64_encode(\CJSON::encode(
-            array(
-                'params' => $this->params,
-                'logPrefix' => $this->logPrefix,
-                'callback' => $this->callback,
+        return base64_encode(
+            \CJSON::encode(
+                array(
+                    'params' => $this->params,
+                    'logPrefix' => $this->logPrefix,
+                    'callback' => $this->callback,
+                )
             )
-        ));
+        );
     }
 
     /**
      * Decodes workload
+     *
      * @param string $workload Workload recieved from gearman job server to decode
      *
      * @return mixed
@@ -143,20 +152,28 @@ class Job extends \CComponent
 
     /**
      * Sends job to gearman job server
+     *
      * @return string Result of sending job.
      */
     public function send() {
-        return $this->getClient()->send(
+        $result = $this->getClient()->send(
             $this->function,
             $this->encode(),
             $this->priority,
             $this->background,
             $this->unique
         );
+
+        if ($this->background) {
+            $this->_handle = $result;
+        }
+
+        return $result;
     }
 
     /**
      * Shortcut to gearman client instance
+     *
      * @return Client
      */
     public function getClient() {
@@ -189,6 +206,7 @@ class Job extends \CComponent
 
     /**
      * GETTER
+     *
      * @return string Status message
      */
     public function getStatus() {
@@ -217,6 +235,7 @@ class Job extends \CComponent
 
     /**
      * GETTER
+     *
      * @return array Full status info. Used to send to callback tasks
      */
     public function getStatusInfo() {

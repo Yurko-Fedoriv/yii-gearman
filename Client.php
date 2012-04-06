@@ -1,9 +1,6 @@
 <?php
 /**
- * Created by JetBrains PhpStorm.
- * Author: Yurko Fedoriv <yurko.fedoriv@gmail.com>
- * Date: 2/14/12
- * Time: 4:46 PM
+ * @author Yurko Fedoriv <yurko.fedoriv@gmail.com>
  */
 namespace gearman;
 /**
@@ -56,11 +53,11 @@ class Client extends Connection
             $doMethod .= 'Background';
         }
 
-        for($i=0; $i<self::RECONNECT_ATTEMPTS; $i++){
+        for ($i = 0; $i < self::RECONNECT_ATTEMPTS; $i++) {
             try {
                 return call_user_func_array(array($this->getInstance(), $doMethod), $args);
             }
-            catch (\ErrorException $e) {
+            catch (\Exception $e) {
                 \Yii::log("Job submission failed: {$e->getMessage()}. Reconnecting", \CLogger::LEVEL_WARNING, 'gearman.client');
                 sleep(self::RECONNECT_TIMEOUT);
                 $this->connect();
