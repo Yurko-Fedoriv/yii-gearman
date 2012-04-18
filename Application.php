@@ -27,6 +27,9 @@ class Application extends \CConsoleApplication
      * Additional application initialization.
      * Replaces error handler with error-to-exception converter.
      * Configures logger to immediately dump logs to routes as they go, which is essential for long-running application.
+     *
+     * @throws \ErrorException
+     * @return void
      */
     protected function init() {
         parent::init();
@@ -127,10 +130,10 @@ class Application extends \CConsoleApplication
     /**
      * Shortcut to cache component included in gearman module.
      *
-     * @return MemCache
+     * @return \CCache|MemCache
      */
     public function getCache() {
-        return $this->getGearman()->getCache();
+        return parent::getCache() ?: $this->getGearman()->getComponent('cache');
     }
 
 }
