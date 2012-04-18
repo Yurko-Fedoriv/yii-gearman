@@ -130,7 +130,7 @@ abstract class BaseWork extends \CComponent
         }
         catch (\Exception $e) { //handling of any exceptions appeared. Marks work as failed, and logs exception. Worker will continue it's normal runtime.
             $job->failed($e);
-            $this->log($e->getMessage(), \CLogger::LEVEL_ERROR);
+            $this->log(YII_DEBUG ? $e : $e->getMessage(), \CLogger::LEVEL_ERROR);
             \Yii::app()->onException(new \CExceptionEvent($this, $e));
 
             $this->error($gearmanJob->workload(), $e);
@@ -427,6 +427,15 @@ abstract class BaseWork extends \CComponent
 
     public function error($workload, $exception) {
 
+    }
+
+    public function setOptions($options) {
+        foreach($options as $key=>$value){
+            if(property_exists($this, $key) || $this->canSetProperty($key)){
+                $this->$key = $value;
+            }
+        }
+        return $this;
     }
 }
 

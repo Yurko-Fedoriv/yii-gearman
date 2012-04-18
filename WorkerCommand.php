@@ -70,20 +70,54 @@ class WorkerCommand extends \CConsoleCommand
     /**
      * Realisation of worker. Connects to gearman server,attaches job functions,
      *
-     * @param array $works Work names to be attached to worker
+     * @param array $args Work names to be attached to worker and named params to be passed to works
      *
      * @return void
      */
-    public function run(array $works) {
+    public function run(array $args) {
+        list($works, $options) = $this->resolveRequest($args);
+
         if (!$works) {
             echo 'Please Provide at least one implemented work name to be handled by worker.', PHP_EOL;
             Yii::app()->end();
         }
         foreach ($works as $workName) {
-            $this->getWork($workName)->registerAll();
+            $this->getWork($workName)->setOptions($options)->registerAll();
         }
 
         $this->getWorker()->work(array($this, 'iterate'));
+    }
+
+    protected function resolveRequest($args) {
+        $options = array(); // named parameters
+        $works = array(); // works
+        foreach ($args as $arg) {
+            if (preg_match('/^--([\w\-]+)(=(.*))?$/', $arg, $matches)) { // an option
+                $name = $matches[1];
+                if (strpos($name, '-') !== false) {
+                    $nameParts = array_filter(explode('-', $name));
+                    $name = array_shift($nameParts);
+                    foreach ($nameParts as $namePart) {
+                        $name .= ucfirst($namePart);
+                    }
+                }
+                $value = isset($matches[3]) ? $matches[3] : true;
+                if (isset($options[$name])) {
+                    if (!is_array($options[$name])) {
+                        $options[$name] = array($options[$name]);
+                    }
+                    $options[$name][] = $value;
+                }
+                else {
+                    $options[$name] = $value;
+                }
+            }
+            else {
+                $works[] = $arg;
+            }
+        }
+
+        return array($works, $options);
     }
 
     /**
