@@ -252,6 +252,7 @@ class Job extends \CComponent
                 :
                 false,
             'lastModified' => $this->_lastModified,
+            'machine' => \Yii::app()->instanceId,
         );
     }
 }
